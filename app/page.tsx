@@ -103,7 +103,7 @@ export default function ScratchPFPifier() {
             } else {
               width = Math.floor(width * 0.9);
               height = Math.floor(height * 0.9);
-              quality = 0.92;
+              quality = 0.9;
             }
           }
 
