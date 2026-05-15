@@ -502,8 +502,31 @@ export default function ScratchPFPifier() {
   };
 
   return (
-    <main className="min-h-screen bg-pink-400 p-8 font-mono">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen p-8 font-mono relative overflow-hidden">
+      {/* Static noise background */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          opacity: 0.15,
+        }}
+      />
+      {/* Diagonal stripes overlay */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(255, 255, 255, 0.08) 10px,
+            rgba(255, 255, 255, 0.08) 20px
+          )`,
+          backgroundSize: '28px 28px',
+        }}
+      />
+      
+      <div className="max-w-4xl mx-auto relative z-10">
         <h1 className="text-4xl font-bold text-white mb-2 text-center">
           Scratch PFP-ifier
         </h1>
@@ -512,7 +535,7 @@ export default function ScratchPFPifier() {
           (500x500px, 512KB max)
         </p>
 
-        <div className="bg-pink-300 p-6 mb-6">
+        <div className="bg-pink-300 p-6 mb-6 border-4 border-pink-800">
           <input
             type="file"
             ref={fileInputRef}
@@ -522,24 +545,24 @@ export default function ScratchPFPifier() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 border-0"
+            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 border-4 border-pink-800"
           >
             Select Image (PNG, JPG, GIF)
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-500 text-white p-4 mb-6 font-mono">
+          <div className="bg-red-500 text-white p-4 mb-6 font-mono border-4 border-red-800">
             {error}
           </div>
         )}
 
         {originalFile && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-pink-300 p-4">
+            <div className="bg-pink-300 p-4 border-4 border-pink-800">
               <h2 className="text-xl font-bold text-pink-800 mb-4">Original</h2>
               {originalPreview && (
-                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px]">
+                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] border-2 border-pink-600">
                   <img
                     src={originalPreview}
                     alt="Original"
@@ -554,13 +577,13 @@ export default function ScratchPFPifier() {
               </div>
             </div>
 
-            <div className="bg-pink-300 p-4">
+            <div className="bg-pink-300 p-4 border-4 border-pink-800">
               <h2 className="text-xl font-bold text-pink-800 mb-4">
                 Processed
               </h2>
               {processedPreview ? (
                 <>
-                  <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px]">
+                  <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] border-2 border-pink-600">
                     <img
                       src={processedPreview}
                       alt="Processed"
@@ -583,7 +606,7 @@ export default function ScratchPFPifier() {
                   )}
                 </>
               ) : (
-                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] text-pink-600">
+                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] text-pink-600 border-2 border-pink-600">
                   {isProcessing ? (
                     <div className="text-center">
                       <p className="font-bold">Processing...</p>
@@ -609,14 +632,14 @@ export default function ScratchPFPifier() {
             <button
               onClick={processImage}
               disabled={isProcessing}
-              className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 border-0"
+              className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 border-4 border-pink-800"
             >
               {isProcessing ? "Processing..." : "Process Image"}
             </button>
             {processedBlob && (
               <button
                 onClick={downloadImage}
-                className="flex-1 bg-pink-800 hover:bg-pink-900 text-white font-bold py-4 px-6 border-0"
+                className="flex-1 bg-pink-800 hover:bg-pink-900 text-white font-bold py-4 px-6 border-4 border-pink-950"
               >
                 Download
               </button>
@@ -624,7 +647,7 @@ export default function ScratchPFPifier() {
           </div>
         )}
 
-        <div className="mt-8 bg-pink-300 p-4">
+        <div className="mt-8 bg-pink-300 p-4 border-4 border-pink-800">
           <h2 className="text-xl font-bold text-pink-800 mb-2">
             How it works
           </h2>
