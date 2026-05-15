@@ -498,7 +498,7 @@ export default function ScratchPFPifier() {
             onClick={() => fileInputRef.current?.click()}
             className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 border border-pink-800"
           >
-            Select Image (PNG, JPG, GIF)
+            Select a PNG, GIF, or JPG image
           </button>
         </div>
 
