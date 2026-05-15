@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scratch PFP-ifier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #f472b6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .static-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 1;
+    }
+
+    .stripes-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0, 0, 0, 0.1) 10px,
+        rgba(0, 0, 0, 0.1) 20px
+      );
+    }
+
+    main {
+      min-height: 100vh;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container {
+      max-width: 56rem;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: #4b5563;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .upload-box {
+      background-color: #f9a8d4;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #9d174d;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .btn {
+      width: 100%;
+      background-color: #ec4899;
+      color: white;
+      font-weight: 700;
+      padding: 1rem 1.5rem;
+      border: 1px solid #9d174d;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+    }
+
+    .btn:hover {
+      background-color: #db2777;
+    }
+
+    .btn:disabled {
+      background-color: #f9a8d4;
+      cursor: not-allowed;
+    }
+
+    .btn-process {
+      background-color: #db2777;
+    }
+
+    .btn-process:hover {
+      background-color: #be185d;
+    }
+
+    .btn-download {
+      background-color: #9d174d;
+    }
+
+    .btn-download:hover {
+      background-color: #831843;
+    }
+
+    .error-box {
+      background-color: #ef4444;
+      color: white;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #991b1b;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background-color: #f9a8d4;
+      padding: 1rem;
+      border: 1px solid #9d174d;
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #9d174d;
+      margin-bottom: 1rem;
+    }
+
+    .preview-box {
+      background-color: #fbcfe8;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      border: 1px solid #db2777;
+    }
+
+    .preview-box img {
+      max-width: 100%;
+      max-height: 300px;
+    }
+
+    .info {
+      color: #9d174d;
+      font-size: 0.875rem;
+    }
+
+    .info p {
+      margin-bottom: 0.25rem;
+    }
+
+    .placeholder {
+      color: #db2777;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .button-row .btn {
+      flex: 1;
+    }
+
+    .how-it-works {
+      margin-top: 2rem;
+      background-color: #f9a8d4;
+      padding: 1rem;
+      border: 1px solid #9d174d;
+    }
+
+    .how-it-works h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #9d174d;
+      margin-bottom: 0.5rem;
+    }
+
+    .how-it-works ul {
+      color: #9d174d;
+      font-size: 0.875rem;
+      list-style-type: disc;
+      list-style-position: inside;
+    }
+
+    .how-it-works li {
+      margin-bottom: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="static-bg"></div>
+  <div class="stripes-bg"></div>
+  
+  <main>
+    <div class="container">
+      <h1>Scratch PFP-ifier</h1>
+      <p class="subtitle">Resize and compress images to fit Scratch profile picture requirements (500x500px, 512KB max)</p>
+
+      <div class="upload-box">
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+        <button class="btn" id="selectBtn">Select a PNG, GIF, or JPG image</button>
+      </div>
+
+      <div id="errorBox" class="error-box hidden"></div>
+
+      <div id="previewSection" class="hidden">
+        <div class="grid">
+          <div class="card">
+            <h2>Original</h2>
+            <div class="preview-box">
+              <img id="originalPreview" alt="Original">
+            </div>
+            <div class="info">
+              <p>Name: <span id="originalName"></span></p>
+              <p>Size: <span id="originalSize"></span></p>
+              <p>Type: <span id="originalType"></span></p>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Processed</h2>
+            <div class="preview-box" id="processedBox">
+              <img id="processedPreview" alt="Processed" class="hidden">
+              <div id="processedPlaceholder" class="placeholder">Click Process to start</div>
+            </div>
+            <div class="info" id="processedInfo" class="hidden">
+              <p>Size: <span id="processedSize"></span></p>
+              <p>Dimensions: <span id="processedDimensions"></span></p>
+              <p>Iterations: <span id="processedIterations"></span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="btn btn-process" id="processBtn">Process Image</button>
+          <button class="btn btn-download hidden" id="downloadBtn">Download</button>
+        </div>
+      </div>
+
+      <div class="how-it-works">
+        <h2>How it works</h2>
+        <ul>
+          <li>Resizes images to 500x500 pixels or smaller</li>
+          <li>Compresses to 512 KB or less</li>
+          <li>Keeps compressing until both conditions are met</li>
+          <li>Supports PNG, JPG, and animated GIF files</li>
+          <li>GIFs are processed frame-by-frame to preserve animation</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/gifuct-js@2.1.2/dist/gifuct-js.min.js"></script>
+  <script>
+    const MAX_DIMENSION = 500;
+    const MAX_FILE_SIZE = 512 * 1024;
+
+    let originalFile = null;
+    let processedBlob = null;
+    let status = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const selectBtn = document.getElementById('selectBtn');
+    const errorBox = document.getElementById('errorBox');
+    const previewSection = document.getElementById('previewSection');
+    const originalPreview = document.getElementById('originalPreview');
+    const originalName = document.getElementById('originalName');
+    const originalSize = document.getElementById('originalSize');
+    const originalType = document.getElementById('originalType');
+    const processedPreview = document.getElementById('processedPreview');
+    const processedPlaceholder = document.getElementById('processedPlaceholder');
+    const processedInfo = document.getElementById('processedInfo');
+    const processedSize = document.getElementById('processedSize');
+    const processedDimensions = document.getElementById('processedDimensions');
+    const processedIterations = document.getElementById('processedIterations');
+    const processBtn = document.getElementById('processBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    selectBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showError('Please select an image file');
+        return;
+      }
+
+      originalFile = file;
+      hideError();
+      
+      originalPreview.src = URL.createObjectURL(file);
+      originalName.textContent = file.name;
+      originalSize.textContent = formatSize(file.size);
+      originalType.textContent = file.type;
+
+      processedPreview.classList.add('hidden');
+      processedPlaceholder.classList.remove('hidden');
+      processedPlaceholder.textContent = 'Click Process to start';
+      processedInfo.classList.add('hidden');
+      downloadBtn.classList.add('hidden');
+      processedBlob = null;
+
+      previewSection.classList.remove('hidden');
+    });
+
+    processBtn.addEventListener('click', processImage);
+    downloadBtn.addEventListener('click', downloadImage);
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorBox.classList.add('hidden');
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      return (bytes / 1024).toFixed(1) + ' KB';
+    }
+
+    function updateStatus(stage, iteration, currentSize, width, height) {
+      status = { stage, iteration, currentSize, width, height };
+      processedPlaceholder.innerHTML = `<div style="text-align:center"><p style="font-weight:bold">Processing...</p><p>${stage}</p><p>Iteration: ${iteration}</p><p>Current size: ${formatSize(currentSize)}</p></div>`;
+    }
+
+    async function processImage() {
+      if (!originalFile) return;
+
+      processBtn.disabled = true;
+      processBtn.textContent = 'Processing...';
+      hideError();
+      processedPreview.classList.add('hidden');
+      processedPlaceholder.classList.remove('hidden');
+      downloadBtn.classList.add('hidden');
+
+      try {
+        let result;
+        if (originalFile.type === 'image/gif') {
+          result = await compressGIF(originalFile);
+        } else {
+          result = await compressStaticImage(originalFile);
+        }
+
+        processedBlob = result.blob;
+        processedPreview.src = result.url;
+        processedPreview.classList.remove('hidden');
+        processedPlaceholder.classList.add('hidden');
+        processedInfo.classList.remove('hidden');
+        processedSize.textContent = formatSize(result.blob.size);
+        processedDimensions.textContent = status.width + 'x' + status.height;
+        processedIterations.textContent = status.iteration;
+        downloadBtn.classList.remove('hidden');
+      } catch (err) {
+        showError(err.message || 'Processing failed');
+      } finally {
+        processBtn.disabled = false;
+        processBtn.textContent = 'Process Image';
+      }
+    }
+
+    function downloadImage() {
+      if (!processedBlob || !originalFile) return;
+
+      const extension = originalFile.type === 'image/gif' ? 'gif' : 'png';
+      const name = originalFile.name.replace(/\.[^/.]+$/, '');
+      const url = URL.createObjectURL(processedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name + '_scratch_pfp.' + extension;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function compressStaticImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = async () => {
+          let width = img.width;
+          let height = img.height;
+          let quality = 0.92;
+          let iteration = 0;
+          let blob = null;
+
+          if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+            const scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+            width = Math.floor(width * scale);
+            height = Math.floor(height * scale);
+          }
+
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          while (true) {
+            iteration++;
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            updateStatus('Compressing', iteration, blob ? blob.size : file.size, width, height);
+
+            blob = await new Promise(res => canvas.toBlob(b => res(b), 'image/png', quality));
+
+            if (!blob) {
+              reject(new Error('Failed to create image blob'));
+              return;
+            }
+
+            if (blob.size <= MAX_FILE_SIZE && width <= MAX_DIMENSION && height <= MAX_DIMENSION) {
+              const url = URL.createObjectURL(blob);
+              resolve({ blob, url });
+              return;
+            }
+
+            if (blob.size > MAX_FILE_SIZE) {
+              if (quality > 0.1) {
+                quality -= 0.05;
+              } else {
+                width = Math.floor(width * 0.9);
+                height = Math.floor(height * 0.9);
+                quality = 0.92;
+              }
+            }
+
+            if (width < 10 || height < 10) {
+              reject(new Error('Image cannot be compressed further'));
+              return;
+            }
+          }
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    async function compressGIF(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const gif = gifuct.parseGIF(arrayBuffer);
+      const frames = gifuct.decompressFrames(gif, true);
+
+      if (frames.length === 0) {
+        throw new Error('No frames found in GIF');
+      }
+
+      let width = gif.lsd.width;
+      let height = gif.lsd.height;
+      let iteration = 0;
+
+      const maxDim = Math.max(width, height);
+      let targetSize = Math.min(maxDim, MAX_DIMENSION);
+      let scaledWidth = targetSize;
+      let scaledHeight = targetSize;
+
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+
+      while (true) {
+        iteration++;
+
+        updateStatus('Processing GIF (' + frames.length + ' frames)', iteration, file.size, scaledWidth, scaledHeight);
+
+        const renderedFrames = [];
+
+        tempCanvas.width = gif.lsd.width;
+        tempCanvas.height = gif.lsd.height;
+
+        const patchCanvas = document.createElement('canvas');
+        const patchCtx = patchCanvas.getContext('2d');
+
+        for (const frame of frames) {
+          patchCanvas.width = frame.dims.width;
+          patchCanvas.height = frame.dims.height;
+          const patchData = patchCtx.createImageData(frame.dims.width, frame.dims.height);
+          patchData.data.set(frame.patch);
+          patchCtx.putImageData(patchData, 0, 0);
+
+          tempCtx.drawImage(patchCanvas, frame.dims.left, frame.dims.top);
+
+          const fullFrameData = tempCtx.getImageData(0, 0, gif.lsd.width, gif.lsd.height);
+          renderedFrames.push({
+            imageData: fullFrameData,
+            delay: frame.delay || 100
+          });
+
+          if (frame.disposalType === 2) {
+            tempCtx.clearRect(0, 0, gif.lsd.width, gif.lsd.height);
+          }
+        }
+
+        const gifData = await createAnimatedGIF(renderedFrames, width, height, scaledWidth, scaledHeight);
+        const blob = new Blob([gifData], { type: 'image/gif' });
+
+        updateStatus('Processing GIF (' + frames.length + ' frames)', iteration, blob.size, scaledWidth, scaledHeight);
+
+        if (blob.size <= MAX_FILE_SIZE && scaledWidth <= MAX_DIMENSION && scaledHeight <= MAX_DIMENSION) {
+          const url = URL.createObjectURL(blob);
+          return { blob, url };
+        }
+
+        scaledWidth = Math.floor(scaledWidth * 0.85);
+        scaledHeight = Math.floor(scaledHeight * 0.85);
+
+        if (scaledWidth < 10 || scaledHeight < 10) {
+          throw new Error('GIF cannot be compressed further');
+        }
+      }
+    }
+
+    async function createAnimatedGIF(frames, originalWidth, originalHeight, targetWidth, targetHeight) {
+      const scaledFrames = [];
+
+      const scaleCanvas = document.createElement('canvas');
+      scaleCanvas.width = targetWidth;
+      scaleCanvas.height = targetHeight;
+      const scaleCtx = scaleCanvas.getContext('2d');
+
+      const srcCanvas = document.createElement('canvas');
+      srcCanvas.width = originalWidth;
+      srcCanvas.height = originalHeight;
+      const srcCtx = srcCanvas.getContext('2d');
+
+      for (const frame of frames) {
+        srcCtx.putImageData(frame.imageData, 0, 0);
+        scaleCtx.clearRect(0, 0, targetWidth, targetHeight);
+        scaleCtx.drawImage(srcCanvas, 0, 0, targetWidth, targetHeight);
+        const scaledData = scaleCtx.getImageData(0, 0, targetWidth, targetHeight);
+        scaledFrames.push({ data: scaledData.data, delay: frame.delay });
+      }
+
+      return encodeGIF(scaledFrames, targetWidth, targetHeight);
+    }
+
+    function encodeGIF(frames, width, height) {
+      const output = [];
+
+      output.push(0x47, 0x49, 0x46, 0x38, 0x39, 0x61);
+
+      output.push(width & 0xff, (width >> 8) & 0xff);
+      output.push(height & 0xff, (height >> 8) & 0xff);
+      output.push(0xf7);
+      output.push(0);
+      output.push(0);
+
+      for (let i = 0; i < 256; i++) {
+        const r = (i >> 5) * 36;
+        const g = ((i >> 2) & 0x07) * 36;
+        const b = (i & 0x03) * 85;
+        output.push(r, g, b);
+      }
+
+      output.push(0x21, 0xff, 0x0b, 0x4e, 0x45, 0x54, 0x53, 0x43, 0x41, 0x50, 0x45, 0x32, 0x2e, 0x30, 0x03, 0x01, 0x00, 0x00, 0x00);
+
+      for (const frame of frames) {
+        const delayCs = Math.max(2, Math.floor(frame.delay / 10));
+        output.push(0x21, 0xf9, 0x04);
+        output.push(0x04);
+        output.push(delayCs & 0xff, (delayCs >> 8) & 0xff);
+        output.push(0x00);
+        output.push(0x00);
+
+        output.push(0x2c);
+        output.push(0x00, 0x00);
+        output.push(0x00, 0x00);
+        output.push(width & 0xff, (width >> 8) & 0xff);
+        output.push(height & 0xff, (height >> 8) & 0xff);
+        output.push(0x00);
+
+        const minCodeSize = 8;
+        output.push(minCodeSize);
+
+        const indexed = [];
+        for (let i = 0; i < frame.data.length; i += 4) {
+          const r = frame.data[i];
+          const g = frame.data[i + 1];
+          const b = frame.data[i + 2];
+          const ri = Math.floor(r / 36);
+          const gi = Math.floor(g / 36);
+          const bi = Math.floor(b / 85);
+          const idx = (ri << 5) | (gi << 2) | bi;
+          indexed.push(Math.min(255, idx));
+        }
+
+        const lzwData = lzwEncode(indexed, minCodeSize);
+
+        for (let i = 0; i < lzwData.length; i += 255) {
+          const chunk = lzwData.slice(i, i + 255);
+          output.push(chunk.length);
+          output.push(...chunk);
+        }
+        output.push(0x00);
+      }
+
+      output.push(0x3b);
+
+      return new Uint8Array(output);
+    }
+
+    function lzwEncode(data, minCodeSize) {
+      const clearCode = 1 << minCodeSize;
+      const eoiCode = clearCode + 1;
+
+      let codeSize = minCodeSize + 1;
+      let nextCode = eoiCode + 1;
+      const maxCode = 4096;
+
+      const dictionary = new Map();
+      for (let i = 0; i < clearCode; i++) {
+        dictionary.set(String(i), i);
+      }
+
+      const output = [];
+      let bits = 0;
+      let bitCount = 0;
+
+      const writeBits = (code, size) => {
+        bits |= code << bitCount;
+        bitCount += size;
+        while (bitCount >= 8) {
+          output.push(bits & 0xff);
+          bits >>= 8;
+          bitCount -= 8;
+        }
+      };
+
+      writeBits(clearCode, codeSize);
+
+      let current = String(data[0]);
+
+      for (let i = 1; i < data.length; i++) {
+        const next = current + ',' + data[i];
+        if (dictionary.has(next)) {
+          current = next;
+        } else {
+          writeBits(dictionary.get(current), codeSize);
+
+          if (nextCode < maxCode) {
+            dictionary.set(next, nextCode++);
+            if (nextCode > (1 << codeSize) && codeSize < 12) {
+              codeSize++;
+            }
+          } else {
+            writeBits(clearCode, codeSize);
+            dictionary.clear();
+            for (let j = 0; j < clearCode; j++) {
+              dictionary.set(String(j), j);
+            }
+            nextCode = eoiCode + 1;
+            codeSize = minCodeSize + 1;
+          }
+
+          current = String(data[i]);
+        }
+      }
+
+      writeBits(dictionary.get(current), codeSize);
+      writeBits(eoiCode, codeSize);
+
+      if (bitCount > 0) {
+        output.push(bits & 0xff);
+      }
+
+      return output;
+    }
+  </script>
+</body>
+</html>
