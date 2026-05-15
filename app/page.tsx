@@ -478,10 +478,10 @@ export default function ScratchPFPifier() {
       />
 
       <div className="max-w-4xl mx-auto relative z-10">
-        <h1 className="text-4xl font-bold text-white mb-2 text-center">
+        <h1 className="text-4xl font-bold text-black mb-2 text-center">
           Scratch PFP-ifier
         </h1>
-        <p className="text-pink-100 text-center mb-8">
+        <p className="text-gray-600 text-center mb-8">
           Resize and compress images to fit Scratch profile picture requirements
           (500x500px, 512KB max)
         </p>
