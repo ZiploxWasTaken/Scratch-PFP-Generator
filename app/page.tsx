@@ -131,14 +131,12 @@ export default function ScratchPFPifier() {
 
     let width = gif.lsd.width;
     let height = gif.lsd.height;
-    let scale = 1;
     let iteration = 0;
 
-    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-      scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
-      width = Math.floor(width * scale);
-      height = Math.floor(height * scale);
-    }
+    const maxDim = Math.max(width, height);
+    let targetSize = Math.min(maxDim, MAX_DIMENSION);
+    let scaledWidth = targetSize;
+    let scaledHeight = targetSize;
 
     const tempCanvas = document.createElement("canvas");
     const tempCtx = tempCanvas.getContext("2d")!;
@@ -150,7 +148,7 @@ export default function ScratchPFPifier() {
         stage: `Processing GIF (${frames.length} frames)`,
         iteration,
         currentSize: file.size,
-        currentDimensions: { width, height },
+        currentDimensions: { width: scaledWidth, height: scaledHeight },
       });
 
       const renderedFrames: { imageData: ImageData; delay: number }[] = [];
@@ -191,10 +189,10 @@ export default function ScratchPFPifier() {
 
       const gifData = await createAnimatedGIF(
         renderedFrames,
-        gif.lsd.width,
-        gif.lsd.height,
         width,
-        height
+        height,
+        scaledWidth,
+        scaledHeight
       );
 
       const blob = new Blob([gifData], { type: "image/gif" });
@@ -203,22 +201,22 @@ export default function ScratchPFPifier() {
         stage: `Processing GIF (${frames.length} frames)`,
         iteration,
         currentSize: blob.size,
-        currentDimensions: { width, height },
+        currentDimensions: { width: scaledWidth, height: scaledHeight },
       });
 
       if (
         blob.size <= MAX_FILE_SIZE &&
-        width <= MAX_DIMENSION &&
-        height <= MAX_DIMENSION
+        scaledWidth <= MAX_DIMENSION &&
+        scaledHeight <= MAX_DIMENSION
       ) {
         const url = URL.createObjectURL(blob);
         return { blob, url };
       }
 
-      width = Math.floor(width * 0.85);
-      height = Math.floor(height * 0.85);
+      scaledWidth = Math.floor(scaledWidth * 0.85);
+      scaledHeight = Math.floor(scaledHeight * 0.85);
 
-      if (width < 10 || height < 10) {
+      if (scaledWidth < 10 || scaledHeight < 10) {
         throw new Error("GIF cannot be compressed further");
       }
     }
@@ -466,14 +464,13 @@ export default function ScratchPFPifier() {
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
-          backgroundImage: `repeating-linear-gradient(
+          background: `repeating-linear-gradient(
             45deg,
             transparent,
             transparent 10px,
-            rgba(255, 255, 255, 0.08) 10px,
-            rgba(255, 255, 255, 0.08) 20px
+            rgba(0, 0, 0, 0.1) 10px,
+            rgba(0, 0, 0, 0.1) 20px
           )`,
-          backgroundSize: "28px 28px",
         }}
       />
 
