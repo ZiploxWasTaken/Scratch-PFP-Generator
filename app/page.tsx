@@ -281,7 +281,6 @@ export default function ScratchPFPifier() {
       scaledFrames.push({ data: scaledData.data, delay: frame.delay });
     }
 
-    // Build GIF binary
     return encodeGIF(scaledFrames, targetWidth, targetHeight);
   }
 
@@ -292,28 +291,26 @@ export default function ScratchPFPifier() {
   ): Uint8Array {
     const output: number[] = [];
 
-    // GIF Header
     output.push(
       ...[0x47, 0x49, 0x46, 0x38, 0x39, 0x61] // GIF89a
     );
 
-    // Logical Screen Descriptor
     output.push(width & 0xff, (width >> 8) & 0xff);
     output.push(height & 0xff, (height >> 8) & 0xff);
-    output.push(0xf7); // Global color table, 256 colors
-    output.push(0); // Background color index
-    output.push(0); // Pixel aspect ratio
+    output.push(0xf7); 
+    output.push(0); 
+    output.push(0); 
 
-    // Global Color Table (256 colors)
+
     for (let i = 0; i < 256; i++) {
-      // Create a simple palette
+
       const r = (i >> 5) * 36;
       const g = ((i >> 2) & 0x07) * 36;
       const b = (i & 0x03) * 85;
       output.push(r, g, b);
     }
 
-    // Netscape Extension for looping
+
     output.push(
       0x21,
       0xff,
