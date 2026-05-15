@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { parseGIF, decompressFrames } from "gifuct-js";
 
 const MAX_DIMENSION = 500;
-const MAX_FILE_SIZE = 512 * 1024; // 512 KB
+const MAX_FILE_SIZE = 512 * 1024;
 
 interface ProcessingStatus {
   stage: string;
@@ -56,7 +56,6 @@ export default function ScratchPFPifier() {
         let iteration = 0;
         let blob: Blob | null = null;
 
-        // First, resize if needed
         if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
           const scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
           width = Math.floor(width * scale);
@@ -66,7 +65,6 @@ export default function ScratchPFPifier() {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d")!;
 
-        // Keep compressing until we meet both conditions
         while (true) {
           iteration++;
           canvas.width = width;
@@ -80,7 +78,6 @@ export default function ScratchPFPifier() {
             currentDimensions: { width, height },
           });
 
-          // Try to create blob with current settings
           blob = await new Promise<Blob | null>((res) => {
             canvas.toBlob((b) => res(b), "image/png", quality);
           });
@@ -90,7 +87,6 @@ export default function ScratchPFPifier() {
             return;
           }
 
-          // Check if we meet the conditions
           if (
             blob.size <= MAX_FILE_SIZE &&
             width <= MAX_DIMENSION &&
@@ -101,19 +97,16 @@ export default function ScratchPFPifier() {
             return;
           }
 
-          // If still too big, reduce quality or dimensions
           if (blob.size > MAX_FILE_SIZE) {
             if (quality > 0.1) {
               quality -= 0.05;
             } else {
-              // Reduce dimensions
               width = Math.floor(width * 0.9);
               height = Math.floor(height * 0.9);
               quality = 0.92;
             }
           }
 
-          // Safety check
           if (width < 10 || height < 10) {
             reject(new Error("Image cannot be compressed further"));
             return;
@@ -141,18 +134,15 @@ export default function ScratchPFPifier() {
     let scale = 1;
     let iteration = 0;
 
-    // Initial resize if needed
     if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
       scale = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
       width = Math.floor(width * scale);
       height = Math.floor(height * scale);
     }
 
-    // Create a temporary canvas to render frames
     const tempCanvas = document.createElement("canvas");
     const tempCtx = tempCanvas.getContext("2d")!;
 
-    // Try different compression levels
     while (true) {
       iteration++;
 
@@ -163,18 +153,15 @@ export default function ScratchPFPifier() {
         currentDimensions: { width, height },
       });
 
-      // Render all frames to check dimensions
       const renderedFrames: { imageData: ImageData; delay: number }[] = [];
 
       tempCanvas.width = gif.lsd.width;
       tempCanvas.height = gif.lsd.height;
 
-      // Create a patch canvas for the current frame
       const patchCanvas = document.createElement("canvas");
       const patchCtx = patchCanvas.getContext("2d")!;
 
       for (const frame of frames) {
-        // Draw the frame patch
         patchCanvas.width = frame.dims.width;
         patchCanvas.height = frame.dims.height;
         const patchData = patchCtx.createImageData(
@@ -184,10 +171,8 @@ export default function ScratchPFPifier() {
         patchData.data.set(frame.patch);
         patchCtx.putImageData(patchData, 0, 0);
 
-        // Draw patch onto temp canvas at correct position
         tempCtx.drawImage(patchCanvas, frame.dims.left, frame.dims.top);
 
-        // Get the full frame
         const fullFrameData = tempCtx.getImageData(
           0,
           0,
@@ -199,23 +184,11 @@ export default function ScratchPFPifier() {
           delay: frame.delay || 100,
         });
 
-        // Handle disposal
         if (frame.disposalType === 2) {
           tempCtx.clearRect(0, 0, gif.lsd.width, gif.lsd.height);
         }
       }
 
-      // Now create the output GIF manually using canvas frames
-      // We'll create an animated PNG or compressed GIF
-      // For simplicity, we'll create a compressed version by scaling
-
-      const outputCanvas = document.createElement("canvas");
-      outputCanvas.width = width;
-      outputCanvas.height = height;
-      const outputCtx = outputCanvas.getContext("2d")!;
-
-      // Encode as animated GIF using a simple approach
-      // We'll use the GIF format directly
       const gifData = await createAnimatedGIF(
         renderedFrames,
         gif.lsd.width,
@@ -242,7 +215,6 @@ export default function ScratchPFPifier() {
         return { blob, url };
       }
 
-      // Reduce dimensions
       width = Math.floor(width * 0.85);
       height = Math.floor(height * 0.85);
 
@@ -252,7 +224,6 @@ export default function ScratchPFPifier() {
     }
   };
 
-  // Simple GIF encoder
   async function createAnimatedGIF(
     frames: { imageData: ImageData; delay: number }[],
     originalWidth: number,
@@ -260,7 +231,6 @@ export default function ScratchPFPifier() {
     targetWidth: number,
     targetHeight: number
   ): Promise<Uint8Array> {
-    // Scale frames
     const scaledFrames: { data: Uint8ClampedArray; delay: number }[] = [];
 
     const scaleCanvas = document.createElement("canvas");
@@ -291,25 +261,20 @@ export default function ScratchPFPifier() {
   ): Uint8Array {
     const output: number[] = [];
 
-    output.push(
-      ...[0x47, 0x49, 0x46, 0x38, 0x39, 0x61] // GIF89a
-    );
+    output.push(...[0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
 
     output.push(width & 0xff, (width >> 8) & 0xff);
     output.push(height & 0xff, (height >> 8) & 0xff);
-    output.push(0xf7); 
-    output.push(0); 
-    output.push(0); 
-
+    output.push(0xf7);
+    output.push(0);
+    output.push(0);
 
     for (let i = 0; i < 256; i++) {
-
       const r = (i >> 5) * 36;
       const g = ((i >> 2) & 0x07) * 36;
       const b = (i & 0x03) * 85;
       output.push(r, g, b);
     }
-
 
     output.push(
       0x21,
@@ -325,42 +290,37 @@ export default function ScratchPFPifier() {
       0x45,
       0x32,
       0x2e,
-      0x30, // NETSCAPE2.0
+      0x30,
       0x03,
       0x01,
       0x00,
-      0x00, // Loop forever
+      0x00,
       0x00
     );
 
     for (const frame of frames) {
-      // Graphics Control Extension
-      const delayCs = Math.max(2, Math.floor(frame.delay / 10)); // Delay in centiseconds
+      const delayCs = Math.max(2, Math.floor(frame.delay / 10));
       output.push(0x21, 0xf9, 0x04);
-      output.push(0x04); // Disposal method: restore to background
+      output.push(0x04);
       output.push(delayCs & 0xff, (delayCs >> 8) & 0xff);
-      output.push(0x00); // Transparent color index (none)
+      output.push(0x00);
       output.push(0x00);
 
-      // Image Descriptor
       output.push(0x2c);
-      output.push(0x00, 0x00); // Left
-      output.push(0x00, 0x00); // Top
+      output.push(0x00, 0x00);
+      output.push(0x00, 0x00);
       output.push(width & 0xff, (width >> 8) & 0xff);
       output.push(height & 0xff, (height >> 8) & 0xff);
-      output.push(0x00); // No local color table
+      output.push(0x00);
 
-      // Image Data with LZW
       const minCodeSize = 8;
       output.push(minCodeSize);
 
-      // Convert RGBA to indexed color
       const indexed: number[] = [];
       for (let i = 0; i < frame.data.length; i += 4) {
         const r = frame.data[i];
         const g = frame.data[i + 1];
         const b = frame.data[i + 2];
-        // Map to 256 color palette
         const ri = Math.floor(r / 36);
         const gi = Math.floor(g / 36);
         const bi = Math.floor(b / 85);
@@ -368,19 +328,16 @@ export default function ScratchPFPifier() {
         indexed.push(Math.min(255, idx));
       }
 
-      // Simple LZW compression
       const lzwData = lzwEncode(indexed, minCodeSize);
 
-      // Write sub-blocks
       for (let i = 0; i < lzwData.length; i += 255) {
         const chunk = lzwData.slice(i, i + 255);
         output.push(chunk.length);
         output.push(...chunk);
       }
-      output.push(0x00); // Block terminator
+      output.push(0x00);
     }
 
-    // Trailer
     output.push(0x3b);
 
     return new Uint8Array(output);
@@ -430,7 +387,6 @@ export default function ScratchPFPifier() {
             codeSize++;
           }
         } else {
-          // Reset dictionary
           writeBits(clearCode, codeSize);
           dictionary.clear();
           for (let j = 0; j < clearCode; j++) {
@@ -500,15 +456,14 @@ export default function ScratchPFPifier() {
 
   return (
     <main className="min-h-screen p-8 font-mono relative overflow-hidden">
-      {/* Static noise background */}
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           opacity: 0.15,
         }}
       />
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           backgroundImage: `repeating-linear-gradient(
@@ -518,10 +473,10 @@ export default function ScratchPFPifier() {
             rgba(255, 255, 255, 0.08) 10px,
             rgba(255, 255, 255, 0.08) 20px
           )`,
-          backgroundSize: '28px 28px',
+          backgroundSize: "28px 28px",
         }}
       />
-      
+
       <div className="max-w-4xl mx-auto relative z-10">
         <h1 className="text-4xl font-bold text-white mb-2 text-center">
           Scratch PFP-ifier
@@ -531,7 +486,7 @@ export default function ScratchPFPifier() {
           (500x500px, 512KB max)
         </p>
 
-        <div className="bg-pink-300 p-6 mb-6 border-4 border-pink-800">
+        <div className="bg-pink-300 p-6 mb-6 border border-pink-800">
           <input
             type="file"
             ref={fileInputRef}
@@ -541,24 +496,24 @@ export default function ScratchPFPifier() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 border-4 border-pink-800"
+            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 border border-pink-800"
           >
             Select Image (PNG, JPG, GIF)
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-500 text-white p-4 mb-6 font-mono border-4 border-red-800">
+          <div className="bg-red-500 text-white p-4 mb-6 font-mono border border-red-800">
             {error}
           </div>
         )}
 
         {originalFile && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-pink-300 p-4 border-4 border-pink-800">
+            <div className="bg-pink-300 p-4 border border-pink-800">
               <h2 className="text-xl font-bold text-pink-800 mb-4">Original</h2>
               {originalPreview && (
-                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] border-2 border-pink-600">
+                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] border border-pink-600">
                   <img
                     src={originalPreview}
                     alt="Original"
@@ -573,13 +528,13 @@ export default function ScratchPFPifier() {
               </div>
             </div>
 
-            <div className="bg-pink-300 p-4 border-4 border-pink-800">
+            <div className="bg-pink-300 p-4 border border-pink-800">
               <h2 className="text-xl font-bold text-pink-800 mb-4">
                 Processed
               </h2>
               {processedPreview ? (
                 <>
-                  <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] border-2 border-pink-600">
+                  <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] border border-pink-600">
                     <img
                       src={processedPreview}
                       alt="Processed"
@@ -602,7 +557,7 @@ export default function ScratchPFPifier() {
                   )}
                 </>
               ) : (
-                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] text-pink-600 border-2 border-pink-600">
+                <div className="bg-pink-200 p-4 mb-4 flex items-center justify-center min-h-[200px] text-pink-600 border border-pink-600">
                   {isProcessing ? (
                     <div className="text-center">
                       <p className="font-bold">Processing...</p>
@@ -628,14 +583,14 @@ export default function ScratchPFPifier() {
             <button
               onClick={processImage}
               disabled={isProcessing}
-              className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 border-4 border-pink-800"
+              className="flex-1 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 border border-pink-800"
             >
               {isProcessing ? "Processing..." : "Process Image"}
             </button>
             {processedBlob && (
               <button
                 onClick={downloadImage}
-                className="flex-1 bg-pink-800 hover:bg-pink-900 text-white font-bold py-4 px-6 border-4 border-pink-950"
+                className="flex-1 bg-pink-800 hover:bg-pink-900 text-white font-bold py-4 px-6 border border-pink-950"
               >
                 Download
               </button>
@@ -643,10 +598,8 @@ export default function ScratchPFPifier() {
           </div>
         )}
 
-        <div className="mt-8 bg-pink-300 p-4 border-4 border-pink-800">
-          <h2 className="text-xl font-bold text-pink-800 mb-2">
-            How it works
-          </h2>
+        <div className="mt-8 bg-pink-300 p-4 border border-pink-800">
+          <h2 className="text-xl font-bold text-pink-800 mb-2">How it works</h2>
           <ul className="text-pink-800 text-sm space-y-1 list-disc list-inside">
             <li>Resizes images to 500x500 pixels or smaller</li>
             <li>Compresses to 512 KB or less</li>
