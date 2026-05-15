@@ -511,7 +511,6 @@ export default function ScratchPFPifier() {
           opacity: 0.15,
         }}
       />
-      {/* Diagonal stripes overlay */}
       <div 
         className="fixed inset-0 pointer-events-none z-0"
         style={{
